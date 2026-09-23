@@ -1,375 +1,890 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kent Jimeno — Portfolio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap" rel="stylesheet">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #0c0c0c;
-      color: #d4d4d4;
-      overflow-x: hidden;
-    }
-    .font-serif { font-family: 'Newsreader', serif; }
-
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      pointer-events: none;
-      opacity: 0.03;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    .nav-link {
-      color: #525252;
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      transition: color 0.4s ease;
-      position: relative;
-      cursor: pointer;
-    }
-    .nav-link:hover { color: #d4d4d4; }
-    .nav-link.active { color: #a3a3a3; }
-    .nav-link::before {
-      content: '';
-      position: absolute;
-      left: -12px;
-      top: 50%;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: #525252;
-      transform: translateY(-50%) scale(0);
-      transition: transform 0.3s ease, background 0.3s ease;
-    }
-    .nav-link:hover::before,
-    .nav-link.active::before {
-      transform: translateY(-50%) scale(1);
-    }
-    .nav-link.active::before { background: #a3a3a3; }
-
-    .page {
-      display: none;
-      opacity: 0;
-      min-height: 100vh;
-    }
-    .page.active-page {
-      display: flex;
-      animation: pageIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    @keyframes pageIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-    .reveal-d1 { transition-delay: 0.1s; }
-    .reveal-d2 { transition-delay: 0.2s; }
-    .reveal-d3 { transition-delay: 0.35s; }
-    .reveal-d4 { transition-delay: 0.5s; }
-
-    .profile-wrapper { position: relative; }
-    .profile-wrapper::before {
-      content: '';
-      position: absolute;
-      inset: -8px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.04);
-    }
-    .profile-wrapper::after {
-      content: '';
-      position: absolute;
-      inset: -20px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.02);
-    }
-
-    .cursor-glow {
-      position: fixed;
-      width: 600px;
-      height: 600px;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 1;
-      background: radial-gradient(circle, rgba(255,255,255,0.015) 0%, transparent 70%);
-      transform: translate(-50%, -50%);
-      transition: left 0.5s ease-out, top 0.5s ease-out;
-    }
-
-    .tag-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 100px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      color: #525252;
-      text-transform: uppercase;
-    }
-    .tag-pill .dot { width: 4px; height: 4px; border-radius: 50%; background: #404040; }
-
-    @keyframes drift {
-      0%, 100% { transform: translateY(0); opacity: 0.3; }
-      50% { transform: translateY(6px); opacity: 0.7; }
-    }
-    .scroll-hint { animation: drift 2.5s ease-in-out infinite; }
-
-    .mobile-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0,0,0,0.94);
-      backdrop-filter: blur(20px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2rem;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-    }
-    .mobile-overlay.open { opacity: 1; pointer-events: all; }
-    .mobile-overlay a {
-      color: #525252;
-      font-size: 1.25rem;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      font-weight: 300;
-      transition: color 0.3s ease;
-      cursor: pointer;
-    }
-    .mobile-overlay a:hover { color: #e5e5e5; }
-
-    .hamburger span {
-      display: block;
-      width: 20px;
-      height: 1px;
-      background: #737373;
-      transition: all 0.3s ease;
-    }
-    .hamburger.open span:first-child { transform: rotate(45deg) translate(3px, 3px); background: #a3a3a3; }
-    .hamburger.open span:last-child { transform: rotate(-45deg) translate(3px, -3px); background: #a3a3a3; }
-
-    .deco-line {
-      position: absolute;
-      width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.02) 30%, rgba(255,255,255,0.02) 70%, transparent);
-    }
-  </style>
-</head>
-<body>
-
-  <div class="cursor-glow" id="glow"></div>
-
-  <!-- ====== NAVIGATION ====== -->
-  <header class="fixed top-0 left-0 right-0 z-50" style="backdrop-filter: blur(16px); background: rgba(12,12,12,0.65);">
-    <div class="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-      <div class="flex items-center gap-2 group cursor-pointer" onclick="switchPage('home')">
-        <div class="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center group-hover:border-neutral-500 transition-colors duration-500">
-          <span class="text-[10px] font-medium text-neutral-500 group-hover:text-neutral-300 transition-colors duration-500">KENT</span>
-        </div>
-      </div>
-      <nav class="hidden md:flex items-center gap-10">
-        <a class="nav-link active" data-page="home" onclick="switchPage('home')">Home</a>
-        <a class="nav-link" data-page="quiz" onclick="switchPage('quiz')">Quiz</a>
-        <a class="nav-link" data-page="laboratory" onclick="switchPage('laboratory')">Laboratory</a>
-        <a class="nav-link" data-page="exam" onclick="switchPage('exam')">Exam</a>
-      </nav>
-      <button class="hamburger md:hidden flex flex-col gap-[5px] p-2" id="menuBtn" aria-label="Menu">
-        <span></span><span></span>
-      </button>
-    </div>
-  </header>
-
-  <div class="mobile-overlay" id="mobileMenu">
-    <a onclick="switchPage('home'); closeMobile()">Home</a>
-    <a onclick="switchPage('quiz'); closeMobile()">Quiz</a>
-    <a onclick="switchPage('laboratory'); closeMobile()">Laboratory</a>
-    <a onclick="switchPage('exam'); closeMobile()">Exam</a>
-  </div>
-
-  <!-- ====== PAGE: HOME ====== -->
-  <div class="page active-page" id="page-home">
-    <div class="deco-line hidden lg:block" style="left:12%; top:0; height:100vh;"></div>
-    <div class="deco-line hidden lg:block" style="right:12%; top:0; height:100vh;"></div>
-
-    <div class="max-w-7xl mx-auto px-8 w-full pt-28 pb-16 flex items-center relative" style="min-height:100vh;">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-y-0 lg:gap-x-12 items-center w-full">
-
-        <div class="lg:col-span-7 flex flex-col">
-          <div class="reveal mb-8">
-            <span class="tag-pill"><span class="dot"></span> My Portfolio</span>
-          </div>
-          <h1 class="reveal reveal-d1 font-serif text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[1.05] tracking-tight text-neutral-100 mb-4">
-            Hi! It's<br>
-            <em class="text-neutral-300">Kent Russell Jimeno</em>
-          </h1>
-          <div class="reveal reveal-d2 w-12 h-px bg-neutral-700 my-8"></div>
-          <p class="reveal reveal-d3 text-neutral-500 font-light text-base md:text-lg leading-[1.8] max-w-lg">
-            A student who enjoys exploring new things, gaining experiences, and learning along the way. I’m still discovering what I want in life while growing my skills and becoming a better version of myself.
-          </p>
-          <div class="reveal reveal-d4 flex flex-wrap items-center gap-3 mt-10">
-            <span class="tag-pill">MLBB</span>
-            <span class="tag-pill">Analyst</span>
-            <span class="tag-pill">Roblox</span>
-          </div>
-        </div>
-
-        <div class="lg:col-span-5 flex justify-center lg:justify-end">
-          <div class="reveal reveal-d2">
-            <div class="profile-wrapper">
-              <div class="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden bg-neutral-900" style="box-shadow: 0 0 80px rgba(0,0,0,0.6), inset 0 0 40px rgba(255,255,255,0.02);">
-                <img src="monster.jpg" alt="Profile" class="w-full h-full object-cover" style="filter: grayscale(50%) contrast(1.1) brightness(0.95);">
-              </div>
-            </div>
-            <p class="text-center mt-6 text-[11px] text-neutral-700 tracking-[0.15em] uppercase reveal reveal-d3">— that's me</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-hint">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#404040" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====== PAGE: QUIZ ====== -->
-  <div class="page" id="page-quiz">
-    <div class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20 flex items-start justify-center" style="min-height:100vh;">
-      <div class="text-center w-full max-w-3xl">
-        <p class="reveal text-neutral-700 text-xs tracking-[0.2em] uppercase mb-3">01</p>
-        <h2 class="reveal reveal-d1 font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4">Quiz</h2>
-        <div class="reveal reveal-d2 w-10 h-px bg-neutral-700 mx-auto mb-8"></div>
-        
-        <div class="flex flex-col gap-8 items-center reveal reveal-d3">
-          <img src="quiz1.png" alt="Quiz 1" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto">
-          <img src="quiz2.png" alt="Quiz 2" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto">
-          <img src="quiz3.png" alt="Quiz 3" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto">
-          <img src="longquiz.png" alt="Long Quiz" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====== PAGE: LABORATORY ====== -->
-<div class="page" id="page-laboratory">
-    <div class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20 flex items-center justify-center" style="min-height:100vh;">
-      <div class="text-center">
-        <p class="reveal text-neutral-700 text-xs tracking-[0.2em] uppercase mb-3">02</p>
-        <h2 class="reveal reveal-d1 font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4">Laboratory</h2>
-        <div class="reveal reveal-d2 w-10 h-px bg-neutral-700 mx-auto mb-6"></div>
-        
-        <div class="flex flex-col items-center gap-4">
-          <a href="Lab1-Elective3.pdf" target="_blank" class="inline-block mt-4 px-6 py-2 border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-300">
-            View Laboratory 1 File
-          </a>
-          <a href="Lab-Act2.pdf" target="_blank" class="inline-block mt-4 px-6 py-2 border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-300">
-            View Laboratory 2 File
-          </a>
-          <a href="Lab3.png" target="_blank" class="inline-block mt-4 px-6 py-2 border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors duration-300">
-            View Laboratory 3 File
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ====== PAGE: EXAM ====== -->
-  <div class="page" id="page-exam">
-    <div class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20 flex items-start justify-center" style="min-height:100vh;">
-      <div class="text-center w-full max-w-3xl">
-        <p class="reveal text-neutral-700 text-xs tracking-[0.2em] uppercase mb-3">03</p>
-        <h2 class="reveal reveal-d1 font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4">Exam</h2>
-        <div class="reveal reveal-d2 w-10 h-px bg-neutral-700 mx-auto mb-8"></div>
-        
-        <!-- Just drop your exam image in the folder and change the src name below -->
-        <div class="flex flex-col gap-8 items-center reveal reveal-d3">
-          <img src="exam1.png" alt="Exam 1" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto">
-          
-          <!-- If you have more, just copy the img tag above and paste it below -->
-          <!-- <img src="exam2.png" alt="Exam 2" class="rounded-lg shadow-2xl border border-neutral-800 max-w-full h-auto"> -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer class="py-10 px-8" id="siteFooter">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p class="text-neutral-700 text-[11px] tracking-[0.1em]">© 2025 Lorem Ipsum</p>
-      <div class="flex items-center gap-1.5">
-        <div class="w-1.5 h-1.5 rounded-full bg-neutral-800"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-neutral-700"></div>
-        <div class="w-1.5 h-1.5 rounded-full bg-neutral-800"></div>
-      </div>
-    </div>
-  </footer>
-
-  <script>
-    const glow = document.getElementById('glow');
-    document.addEventListener('mousemove', (e) => {
-      glow.style.left = e.clientX + 'px';
-      glow.style.top = e.clientY + 'px';
-    });
-
-    const menuBtn = document.getElementById('menuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-    let menuOpen = false;
-
-    menuBtn.addEventListener('click', () => {
-      menuOpen = !menuOpen;
-      menuBtn.classList.toggle('open', menuOpen);
-      mobileMenu.classList.toggle('open', menuOpen);
-    });
-
-    function closeMobile() {
-      menuOpen = false;
-      menuBtn.classList.remove('open');
-      mobileMenu.classList.remove('open');
-    }
-
-    function switchPage(pageName) {
-      document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active-page');
-      });
-
-      const target = document.getElementById('page-' + pageName);
-      if (target) {
-        target.classList.add('active-page');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Kent Russell Jimeno — coursework portfolio for Elective 3, BSIT 3B."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%97%8F%3C/text%3E%3C/svg%3E"
+    />
+    <title>Kent Jimeno — Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        background: #0c0c0c;
+        color: #d4d4d4;
+        overflow-x: hidden;
+      }
+      .font-serif {
+        font-family: "Newsreader", serif;
       }
 
-      document.querySelectorAll('.nav-link').forEach(l => {
-        l.classList.toggle('active', l.dataset.page === pageName);
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+
+      .nav-link {
+        color: #6b6b6b;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        transition: color 0.4s ease;
+        position: relative;
+        cursor: pointer;
+      }
+      .nav-link:hover {
+        color: #e5e5e5;
+      }
+      .nav-link.active {
+        color: #b8b8b8;
+      }
+      .nav-link::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #6b6b6b;
+        transform: translateY(-50%) scale(0);
+        transition:
+          transform 0.3s ease,
+          background 0.3s ease;
+      }
+      .nav-link:hover::before,
+      .nav-link.active::before {
+        transform: translateY(-50%) scale(1);
+      }
+      .nav-link.active::before {
+        background: #b8b8b8;
+      }
+
+      .page {
+        display: none;
+        opacity: 0;
+        min-height: 100vh;
+      }
+      .page.active-page {
+        display: flex;
+        animation: pageIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes pageIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+          transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .reveal-d1 {
+        transition-delay: 0.1s;
+      }
+      .reveal-d2 {
+        transition-delay: 0.2s;
+      }
+      .reveal-d3 {
+        transition-delay: 0.35s;
+      }
+      .reveal-d4 {
+        transition-delay: 0.5s;
+      }
+
+      .profile-wrapper {
+        position: relative;
+      }
+      .profile-wrapper::before {
+        content: "";
+        position: absolute;
+        inset: -8px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .profile-wrapper::after {
+        content: "";
+        position: absolute;
+        inset: -20px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+      }
+
+      .cursor-glow {
+        position: fixed;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.015) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        transition:
+          left 0.5s ease-out,
+          top 0.5s ease-out;
+      }
+
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 100px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        color: #6b6b6b;
+        text-transform: uppercase;
+      }
+      .tag-pill .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #525252;
+      }
+
+      @keyframes drift {
+        0%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.3;
+        }
+        50% {
+          transform: translateY(6px);
+          opacity: 0.7;
+        }
+      }
+      .scroll-hint {
+        animation: drift 2.5s ease-in-out infinite;
+      }
+
+      .mobile-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.94);
+        backdrop-filter: blur(20px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+      }
+      .mobile-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .mobile-overlay a {
+        color: #6b6b6b;
+        font-size: 1.25rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        font-weight: 300;
+        transition: color 0.3s ease;
+        cursor: pointer;
+      }
+      .mobile-overlay a:hover {
+        color: #e5e5e5;
+      }
+
+      .hamburger span {
+        display: block;
+        width: 20px;
+        height: 1px;
+        background: #8a8a8a;
+        transition: all 0.3s ease;
+      }
+      .hamburger.open span:first-child {
+        transform: rotate(45deg) translate(3px, 3px);
+        background: #b8b8b8;
+      }
+      .hamburger.open span:last-child {
+        transform: rotate(-45deg) translate(3px, -3px);
+        background: #b8b8b8;
+      }
+
+      .deco-line {
+        position: absolute;
+        width: 1px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(255, 255, 255, 0.02) 30%,
+          rgba(255, 255, 255, 0.02) 70%,
+          transparent
+        );
+      }
+
+      /* ---- Result card: frames a screenshot as a labeled artifact, matching the dark aesthetic ---- */
+      .result-card {
+        width: 100%;
+        max-width: 640px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: #101010;
+        border-radius: 4px;
+        overflow: hidden;
+        text-align: left;
+        transition: border-color 0.3s ease;
+      }
+      .result-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+      .result-card__bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .result-card__label {
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #8a8a8a;
+      }
+      .result-card__score {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: #d4d4d4;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 100px;
+        padding: 3px 10px;
+      }
+      .result-card__img-wrap {
+        background: #050505;
+        display: flex;
+        justify-content: center;
+        padding: 4px;
+      }
+      .result-card__img-wrap img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .result-card__note {
+        padding: 12px 18px 16px;
+        font-size: 12px;
+        color: #6b6b6b;
+        font-weight: 300;
+        line-height: 1.6;
+      }
+
+      /* ---- Laboratory Card UI Overhaul ---- */
+      .lab-card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: #0f0f0f;
+        border-radius: 8px;
+        overflow: hidden;
+        text-decoration: none;
+        color: #d4d4d4;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      .lab-card:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+        background: #121212;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+      }
+      .lab-card__preview {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3; /* Gives a large, consistent rectangular preview area */
+        background: #050505;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .lab-card__preview::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to top,
+          rgba(15, 15, 15, 0.6),
+          transparent 50%
+        );
+        pointer-events: none;
+      }
+      .lab-card__preview iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        pointer-events: none;
+      }
+      .lab-card__preview img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        filter: grayscale(10%) brightness(0.9);
+      }
+      .lab-card__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+      }
+      .lab-card__title {
+        font-size: 15px;
+        font-weight: 500;
+        color: #e5e5e5;
+      }
+      .lab-card__sub {
+        font-size: 10px;
+        color: #6b6b6b;
+        margin-top: 4px;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+      .lab-card__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: #8a8a8a;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
+      .lab-card:hover .lab-card__icon {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #e5e5e5;
+        transform: rotate(-45deg);
+      }
+
+      .skill-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .skill-row:last-child {
+        border-bottom: none;
+      }
+      .skill-row__name {
+        font-size: 15px;
+        color: #d4d4d4;
+        font-weight: 300;
+      }
+      .skill-row__tag {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #6b6b6b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cursor-glow" id="glow"></div>
+
+    <!-- ====== NAVIGATION ====== -->
+    <header
+      class="fixed top-0 left-0 right-0 z-50"
+      style="backdrop-filter: blur(16px); background: rgba(12, 12, 12, 0.65)"
+    >
+      <div
+        class="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between"
+      >
+        <div
+          class="flex items-center gap-2 group cursor-pointer"
+          onclick="switchPage('home')"
+        >
+          <div
+            class="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center group-hover:border-neutral-500 transition-colors duration-500"
+          >
+            <span
+              class="text-[10px] font-medium text-neutral-500 group-hover:text-neutral-300 transition-colors duration-500"
+              >KENT</span
+            >
+          </div>
+        </div>
+        <nav class="hidden md:flex items-center gap-10">
+          <a
+            class="nav-link active"
+            data-page="home"
+            onclick="switchPage('home')"
+            >Home</a
+          >
+          <a class="nav-link" data-page="quiz" onclick="switchPage('quiz')"
+            >Quiz</a
+          >
+          <a
+            class="nav-link"
+            data-page="laboratory"
+            onclick="switchPage('laboratory')"
+            >Laboratory</a
+          >
+          <a class="nav-link" data-page="exam" onclick="switchPage('exam')"
+            >Exam</a
+          >
+        </nav>
+        <button
+          class="hamburger md:hidden flex flex-col gap-[5px] p-2"
+          id="menuBtn"
+          aria-label="Menu"
+        >
+          <span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-overlay" id="mobileMenu">
+      <a
+        onclick="
+          switchPage('home');
+          closeMobile();
+        "
+        >Home</a
+      >
+      <a
+        onclick="
+          switchPage('quiz');
+          closeMobile();
+        "
+        >Quiz</a
+      >
+      <a
+        onclick="
+          switchPage('laboratory');
+          closeMobile();
+        "
+        >Laboratory</a
+      >
+      <a
+        onclick="
+          switchPage('exam');
+          closeMobile();
+        "
+        >Exam</a
+      >
+    </div>
+
+    <!-- ====== PAGE: HOME ====== -->
+    <div class="page active-page" id="page-home">
+      <div
+        class="deco-line hidden lg:block"
+        style="left: 12%; top: 0; height: 100vh"
+      ></div>
+      <div
+        class="deco-line hidden lg:block"
+        style="right: 12%; top: 0; height: 100vh"
+      ></div>
+
+      <div
+        class="max-w-7xl mx-auto px-8 w-full pt-28 pb-16 flex items-center relative"
+        style="min-height: 100vh"
+      >
+        <div
+          class="grid grid-cols-1 lg:grid-cols-12 gap-y-12 lg:gap-y-0 lg:gap-x-12 items-center w-full"
+        >
+          <div class="lg:col-span-7 flex flex-col">
+            <div class="reveal mb-8">
+              <span class="tag-pill"
+                ><span class="dot"></span> Elective 3 — BSIT 3B</span
+              >
+            </div>
+            <h1
+              class="reveal reveal-d1 font-serif text-[2.75rem] sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[1.05] tracking-tight text-neutral-100 mb-4"
+            >
+              Hi! It's<br />
+              <em class="text-neutral-300">Kent Russell Jimeno</em>
+            </h1>
+            <div class="reveal reveal-d2 w-12 h-px bg-neutral-700 my-8"></div>
+            <p
+              class="reveal reveal-d3 text-neutral-400 font-light text-base md:text-lg leading-[1.8] max-w-lg"
+            >
+              Curious by nature and always eager to tinker, I'm a BSIT student who loves diving into new tech to see how things really work under the hood. This space is my exploration log for Elective 3 a place to track my journey through virtualization, hands-on labs, and exams as I learn by doing.
+            </p>
+            <div
+              class="reveal reveal-d4 flex flex-wrap items-center gap-3 mt-10"
+            >
+              <span class="tag-pill">Developer</span>
+              <span class="tag-pill">Networking</span>
+              <span class="tag-pill">Analyst</span>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 flex justify-center lg:justify-end">
+            <div class="reveal reveal-d2">
+              <div class="profile-wrapper">
+                <div
+                  class="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 rounded-full overflow-hidden bg-neutral-900"
+                  style="
+                    box-shadow:
+                      0 0 80px rgba(0, 0, 0, 0.6),
+                      inset 0 0 40px rgba(255, 255, 255, 0.02);
+                  "
+                >
+                  <img
+                    src="monster.jpg"
+                    alt="Profile"
+                    class="w-full h-full object-cover"
+                    style="
+                      filter: grayscale(50%) contrast(1.1) brightness(0.95);
+                    "
+                  />
+                </div>
+              </div>
+              <p
+                class="text-center mt-6 text-[11px] text-neutral-600 tracking-[0.15em] uppercase reveal reveal-d3"
+              >
+                — that's me
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 scroll-hint">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#525252"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 5v14M19 12l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: QUIZ ====== -->
+    <div class="page" id="page-quiz">
+      <div
+        class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20 flex items-start justify-center"
+        style="min-height: 100vh"
+      >
+        <div class="text-center w-full max-w-3xl">
+          <h2
+            class="reveal font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4"
+          >
+            Quiz
+          </h2>
+          <div
+            class="reveal reveal-d1 w-10 h-px bg-neutral-700 mx-auto mb-10"
+          ></div>
+
+          <div class="flex flex-col gap-6 items-center reveal reveal-d2">
+            <div class="result-card">
+              <div class="result-card__bar">
+                <span class="result-card__label">Quiz 1</span>
+                <span class="result-card__score">19 / 20</span>
+              </div>
+              <div class="result-card__img-wrap">
+                <img src="quiz1.png" alt="Quiz 1 result" />
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-card__bar">
+                <span class="result-card__label">Quiz 2</span>
+                <span class="result-card__score">20 / 20</span>
+              </div>
+              <div class="result-card__img-wrap">
+                <img src="quiz2.png" alt="Quiz 2 result" />
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-card__bar">
+                <span class="result-card__label">Quiz 3</span>
+                <span class="result-card__score">20 / 20</span>
+              </div>
+              <div class="result-card__img-wrap">
+                <img src="quiz3.png" alt="Quiz 3 result" />
+              </div>
+            </div>
+
+            <div class="result-card">
+              <div class="result-card__bar">
+                <span class="result-card__label">Long Quiz</span>
+                <span class="result-card__score">39 / 40</span>
+              </div>
+              <div class="result-card__img-wrap">
+                <img src="longquiz.png" alt="Long quiz result" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: LABORATORY ====== -->
+    <div class="page" id="page-laboratory">
+      <div
+        class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20"
+        style="min-height: 100vh"
+      >
+        <div class="text-center w-full mb-12">
+          <h2
+            class="reveal font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4"
+          >
+            Laboratory
+          </h2>
+          <div class="reveal reveal-d1 w-10 h-px bg-neutral-700 mx-auto"></div>
+        </div>
+
+        <!-- 3-Column Grid Layout for larger, cleaner cards -->
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto reveal reveal-d2"
+        >
+          <!-- Lab 1 -->
+          <a href="Lab1-Elective3.pdf" target="_blank" class="lab-card">
+            <div class="lab-card__preview">
+              <!-- Hidden parameters in URL to strip PDF toolbars for a cleaner glimpse -->
+              <iframe
+                src="Lab1-Elective3.pdf"
+                loading="lazy"
+                scrolling="no"
+              ></iframe>
+            </div>
+            <div class="lab-card__footer">
+              <div class="text-left">
+                <span class="lab-card__title">Laboratory 1</span>
+                <span class="lab-card__sub">PDF Document</span>
+              </div>
+              <div class="lab-card__icon">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M7 17L17 7M7 7h10v10" />
+                </svg>
+              </div>
+            </div>
+          </a>
+
+          <!-- Lab 2 -->
+          <a href="Lab-Act2.pdf" target="_blank" class="lab-card">
+            <div class="lab-card__preview">
+              <iframe
+                src="Lab-Act2.pdf#toolbar=0&navpanes=0"
+                loading="lazy"
+                scrolling="no"
+              ></iframe>
+            </div>
+            <div class="lab-card__footer">
+              <div class="text-left">
+                <span class="lab-card__title">Laboratory 2</span>
+                <span class="lab-card__sub">PDF Document</span>
+              </div>
+              <div class="lab-card__icon">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M7 17L17 7M7 7h10v10" />
+                </svg>
+              </div>
+            </div>
+          </a>
+
+          <!-- Lab 3 -->
+          <a href="Lab3.png" target="_blank" class="lab-card">
+            <div class="lab-card__preview">
+              <!-- For images, <img> is naturally responsive and clipped by the wrapper -->
+              <img src="Lab3.png" alt="Lab 3 thumbnail" />
+            </div>
+            <div class="lab-card__footer">
+              <div class="text-left">
+                <span class="lab-card__title">Laboratory 3</span>
+                <span class="lab-card__sub">Image File</span>
+              </div>
+              <div class="lab-card__icon">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M7 17L17 7M7 7h10v10" />
+                </svg>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PAGE: EXAM ====== -->
+    <div class="page" id="page-exam">
+      <div
+        class="max-w-7xl mx-auto px-8 w-full pt-32 pb-20 flex items-start justify-center"
+        style="min-height: 100vh"
+      >
+        <div class="text-center w-full max-w-3xl">
+          <h2
+            class="reveal font-serif text-3xl md:text-5xl font-light text-neutral-200 mb-4"
+          >
+            Exam
+          </h2>
+          <div
+            class="reveal reveal-d1 w-10 h-px bg-neutral-700 mx-auto mb-10"
+          ></div>
+
+          <div class="flex flex-col gap-6 items-center reveal reveal-d2">
+            <!-- Wrapped the result card in an <a> tag so it's clickable to open the full image -->
+            <a
+              href="Prelim Exam.jpg"
+              target="_blank"
+              class="result-card"
+              style="text-decoration: none; color: inherit; cursor: pointer"
+            >
+              <div class="result-card__bar">
+                <span class="result-card__label">Prelim Exam</span>
+                <span class="result-card__score">Click to open</span>
+              </div>
+              <div class="result-card__img-wrap">
+                <img src="Prelim Exam.jpg" alt="Prelim Exam result" />
+              </div>
+            </a>
+
+            <!-- If you have more, copy the .result-card block above and paste it here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-10 px-8" id="siteFooter">
+      <div
+        class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4"
+      >
+        <p class="text-neutral-600 text-[11px] tracking-[0.1em]">© 2025 Kent</p>
+        <div class="flex items-center gap-1.5">
+          <div class="w-1.5 h-1.5 rounded-full bg-neutral-800"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-neutral-700"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-neutral-800"></div>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      const glow = document.getElementById("glow");
+      document.addEventListener("mousemove", (e) => {
+        glow.style.left = e.clientX + "px";
+        glow.style.top = e.clientY + "px";
       });
 
-      setTimeout(() => {
-        target.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
-      }, 50);
+      const menuBtn = document.getElementById("menuBtn");
+      const mobileMenu = document.getElementById("mobileMenu");
+      let menuOpen = false;
 
-      window.scrollTo({ top: 0, behavior: 'instant' });
-    }
+      menuBtn.addEventListener("click", () => {
+        menuOpen = !menuOpen;
+        menuBtn.classList.toggle("open", menuOpen);
+        mobileMenu.classList.toggle("open", menuOpen);
+      });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        document.querySelectorAll('#page-home .reveal').forEach(el => el.classList.add('visible'));
-      }, 150);
-    });
-  </script>
-</body>
+      function closeMobile() {
+        menuOpen = false;
+        menuBtn.classList.remove("open");
+        mobileMenu.classList.remove("open");
+      }
+
+      function switchPage(pageName) {
+        document.querySelectorAll(".page").forEach((p) => {
+          p.classList.remove("active-page");
+        });
+
+        const target = document.getElementById("page-" + pageName);
+        if (target) {
+          target.classList.add("active-page");
+        }
+
+        document.querySelectorAll(".nav-link").forEach((l) => {
+          l.classList.toggle("active", l.dataset.page === pageName);
+        });
+
+        setTimeout(() => {
+          target
+            .querySelectorAll(".reveal")
+            .forEach((el) => el.classList.add("visible"));
+        }, 50);
+
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+          document
+            .querySelectorAll("#page-home .reveal")
+            .forEach((el) => el.classList.add("visible"));
+        }, 150);
+      });
+    </script>
+  </body>
 </html>
